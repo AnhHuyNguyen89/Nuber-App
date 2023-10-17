@@ -1,5 +1,8 @@
 package nuber.students;
 
+import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
@@ -18,7 +21,9 @@ import java.util.concurrent.Future;
  */
 public class NuberRegion {
 
-	
+	private NuberDispatch dispatch;
+	private String regionName;
+	private ExecutorService executorService;
 	/**
 	 * Creates a new Nuber region
 	 * 
@@ -28,8 +33,10 @@ public class NuberRegion {
 	 */
 	public NuberRegion(NuberDispatch dispatch, String regionName, int maxSimultaneousJobs)
 	{
-		
-
+		System.out.println(" Start creating Nuber region for " + regionName);
+		this.dispatch = dispatch;
+		this.regionName = regionName;
+		executorService = Executors.newFixedThreadPool(maxSimultaneousJobs);
 	}
 	
 	/**
@@ -45,7 +52,12 @@ public class NuberRegion {
 	 */
 	public Future<BookingResult> bookPassenger(Passenger waitingPassenger)
 	{		
-		
+		Booking booking = new Booking(dispatch,waitingPassenger);
+		if(executorService.isShutdown()){
+			dispatch.logEvent(booking, "Booking is rejected");
+			return null;
+		}
+		return executorService.submit(booking);
 	}
 	
 	/**
@@ -53,6 +65,7 @@ public class NuberRegion {
 	 */
 	public void shutdown()
 	{
+		executorService.shutdown();
 	}
 		
 }
