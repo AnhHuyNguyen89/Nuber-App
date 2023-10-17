@@ -1,10 +1,14 @@
 package nuber.students;
 
+import java.util.Random;
+
 public class Driver extends Person {
 
-	
+	private Passenger lastestPassengers;
+
 	public Driver(String driverName, int maxSleep)
 	{
+		super(driverName, maxSleep);
 	}
 	
 	/**
@@ -16,6 +20,13 @@ public class Driver extends Person {
 	 */
 	public void pickUpPassenger(Passenger newPassenger)
 	{
+		try{
+			lastestPassengers = newPassenger;
+			Random randomizedRandom = new Random();
+			Thread.sleep(randomizedRandom.nextInt(maxSleep));
+		} catch (InterruptedException e){
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -25,6 +36,11 @@ public class Driver extends Person {
 	 * @throws InterruptedException
 	 */
 	public void driveToDestination() {
+		try {
+			Thread.sleep(lastestPassengers.getTravelTime());
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 	
 }
