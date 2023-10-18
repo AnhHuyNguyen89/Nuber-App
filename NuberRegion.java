@@ -50,6 +50,7 @@ public class NuberRegion {
 	 * @param waitingPassenger
 	 * @return a Future that will provide the final BookingResult object from the completed booking
 	 */
+
 	public Future<BookingResult> bookPassenger(Passenger waitingPassenger)
 	{		
 		Booking booking = new Booking(dispatch,waitingPassenger);

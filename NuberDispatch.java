@@ -1,6 +1,8 @@
 package nuber.students;
 
+import java.sql.Driver;
 import java.util.HashMap;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Future;
 
 /**
@@ -15,9 +17,12 @@ public class NuberDispatch {
 	 * The maximum number of idle drivers that can be awaiting a booking 
 	 */
 	private final int MAX_DRIVERS = 999;
-	
-	private boolean logEvents = false;
-	public int bookingID;
+	private int pendingBooking;
+	public int bookingId;
+	private boolean logEventBookings;
+	private HashMap<String, Integer> regionInfo;
+	private BlockingQueue<Driver> driverQueue;
+	private HashMap<String, NuberRegion> regions;
 	
 	/**
 	 * Creates a new dispatch objects and instantiates the required regions and any other objects required.
@@ -41,6 +46,13 @@ public class NuberDispatch {
 	 */
 	public boolean addDriver(Driver newDriver)
 	{
+		try {
+			driverQueue.put(newDriver);
+			return true;
+		} catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	/**
@@ -52,6 +64,15 @@ public class NuberDispatch {
 	 */
 	public Driver getDriver()
 	{
+		try {
+			Driver val = driverQueue.take();
+			pendingBooking--;
+			return val;
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	/**
@@ -64,7 +85,7 @@ public class NuberDispatch {
 	 */
 	public void logEvent(Booking booking, String message) {
 		
-		if (!logEvents) return;
+		if (!logEventBookings) return;
 		
 		System.out.println(booking + ": " + message);
 		
@@ -82,6 +103,11 @@ public class NuberDispatch {
 	 * @return returns a Future<BookingResult> object
 	 */
 	public Future<BookingResult> bookPassenger(Passenger passenger, String region) {
+		NuberRegion bookingRegion = regions.get(region);
+		Future<BookingResult> res = bookingRegion.bookPassenger(passenger);
+		bookingId++;
+		if(res != null) pending++;
+		return res;
 	}
 
 	/**
@@ -93,12 +119,16 @@ public class NuberDispatch {
 	 */
 	public int getBookingsAwaitingDriver()
 	{
+		return pendingBooking;
 	}
 	
 	/**
 	 * Tells all regions to finish existing bookings already allocated, and stop accepting new bookings
 	 */
 	public void shutdown() {
+		for(NuberRegion region: regions.values()) {
+			region.shutdown();
+		}
 	}
 
 }
