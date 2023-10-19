@@ -1,9 +1,13 @@
 package nuber.students;
 
-import java.sql.Driver;
 import java.util.HashMap;
-import java.util.concurrent.BlockingQueue;
+import java.sql.Driver;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.executorService;
+import java.util.concurrent.BlockingQueue;
+import java.util.*;
 
 /**
  * The core Dispatch class that instantiates and manages everything for Nuber
@@ -19,9 +23,9 @@ public class NuberDispatch {
 	private final int MAX_DRIVERS = 999;
 	private int pendingBooking;
 	public int bookingId;
-	private boolean logEventBookings;
+	private boolean logEvents;
 	private HashMap<String, Integer> regionInfo;
-	private BlockingQueue<Driver> driverQueue;
+	private BlockingQueue<Driver> driverBlockingQueue;
 	private HashMap<String, NuberRegion> regions;
 	
 	/**
@@ -33,7 +37,23 @@ public class NuberDispatch {
 	 */
 	public NuberDispatch(HashMap<String, Integer> regionInfo, boolean logEvents)
 	{
-		
+		System.out.println("Start to create Nuber Dispatch");
+		this.regionInfo = regionInfo;
+		this.logEvents = logEvents;
+		driverBlockingQueue = new ArrayBlockingQueue<Driver>(MAX_DRIVERS);
+		pendingBooking = 0;
+		bookingId =1;
+
+		regions = new HashMap<String, NuberRegion>();
+		System.out.println("Creating" + this.regionInfo.size() + "regions");
+		for(var entry:this.regionInfo.entrySet()){
+			String regionName = entry.getKey();
+			Integer peakBooking = entry.getValue();
+			NuberRegion newRegion = new NuberRegion(this, regionName, peakBooking);
+			regions.put(regionName, newRegion);
+		}
+
+		System.out.println("The system has successfully loaded " + this.regionInfo.size() + "regions");
 	}
 	
 	/**
@@ -47,7 +67,7 @@ public class NuberDispatch {
 	public boolean addDriver(Driver newDriver)
 	{
 		try {
-			driverQueue.put(newDriver);
+			driverBlockingQueue.put(newDriver);
 			return true;
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -65,9 +85,9 @@ public class NuberDispatch {
 	public Driver getDriver()
 	{
 		try {
-			Driver val = driverQueue.take();
+			Driver value = driverQueue.take();
 			pendingBooking--;
-			return val;
+			return value;
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -85,9 +105,10 @@ public class NuberDispatch {
 	 */
 	public void logEvent(Booking booking, String message) {
 		
-		if (!logEventBookings) return;
-		
-		System.out.println(booking + ": " + message);
+		if (!logEvents) 
+		return;
+
+		System.out.println(booking + "has: " + message);
 		
 	}
 
@@ -103,10 +124,12 @@ public class NuberDispatch {
 	 * @return returns a Future<BookingResult> object
 	 */
 	public Future<BookingResult> bookPassenger(Passenger passenger, String region) {
+		
 		NuberRegion bookingRegion = regions.get(region);
 		Future<BookingResult> res = bookingRegion.bookPassenger(passenger);
 		bookingId++;
-		if(res != null) pending++;
+		if(res != null) pendingBooking++;
+
 		return res;
 	}
 
