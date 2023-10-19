@@ -81,7 +81,7 @@ public class Simulation {
 					i.remove();
 				}
 			}
-
+			
 			//print status update
 			System.out.println("Active bookings: " + bookings.size()+", pending: "+dispatch.getBookingsAwaitingDriver());
 

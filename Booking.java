@@ -1,4 +1,5 @@
 package nuber.students;
+
 import java.util.Date;
 import java.util.concurrent.Callable;
 
@@ -20,11 +21,12 @@ import java.util.concurrent.Callable;
  * @author james
  *
  */
-public class Booking {
+public class Booking implements Callable<BookingResult>{
 
 	private NuberDispatch dispatch;
 	private Passenger passenger;
-	private BookingResult bookResult;	
+	private BookingResult resultOfBook;
+	
 	/**
 	 * Creates a new booking for a given Nuber dispatch and passenger, noting that no
 	 * driver is provided as it will depend on whether one is available when the region 
@@ -37,8 +39,8 @@ public class Booking {
 	{
 		this.dispatch = dispatch;
 		this.passenger = passenger;
-		bookResult = new BookingResult(dispatch.bookingID, null, null, 0);
-		dispatch.logEvent(this, "Create booking");
+		resultOfBook = new BookingResult(dispatch.bookingID, null, null, 0);
+		dispatch.logEvent(this, "Booking has been created");
 	}
 	
 	/**
@@ -57,8 +59,25 @@ public class Booking {
 	 *
 	 * @return A BookingResult containing the final information about the booking 
 	 */
-	public BookingResult call() {
 
+	public BookingResult call() {
+		resultOfBook.passenger = passenger;
+		dispatch.logEvent(this, "Starting to make a booking, connecting to driver");
+		resultOfBook.driver = dispatch.getDriver();
+		
+		//Pick up passenger and drive
+		long startDate = new Date().getTime();
+		dispatch.logEvent(this, "Starting a trip now, it's on way to a passenger");
+		resultOfBook.driver.pickUpPassenger(passenger);
+		
+		dispatch.logEvent(this, "Correctly picked up passenger, driving to destination");
+		resultOfBook.driver.driveToDestination();
+		long endDate = new Date().getTime();
+		resultOfBook.tripDuration = endDate - startDate;
+		
+		dispatch.logEvent(this, "Passenger has arrived at destination, and a driver is now ready for next trip");
+		dispatch.addDriver(resultOfBook.driver);
+		return resultOfBook;
 	}
 	
 	/***
@@ -71,9 +90,15 @@ public class Booking {
 	 * 
 	 * @return The compiled string
 	 */
+	
 	@Override
 	public String toString()
 	{
+		return String.format("%d: %s: %s: ", 
+			resultOfBook.jobID, 
+			resultOfBook.driver != null ? resultOfBook.driver.name : "null", 
+			resultOfBook.passenger != null ? resultOfBook.passenger.name : "null"
+		);
 	}
 
 }

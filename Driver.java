@@ -4,7 +4,7 @@ import java.util.Random;
 
 public class Driver extends Person {
 
-	private Passenger lastestPassengers;
+	private Passenger presentPassenger;
 
 	public Driver(String driverName, int maxSleep)
 	{
@@ -21,7 +21,7 @@ public class Driver extends Person {
 	public void pickUpPassenger(Passenger newPassenger)
 	{
 		try{
-			lastestPassengers = newPassenger;
+			presentPassenger = newPassenger;
 			Random randomizedRandom = new Random();
 			Thread.sleep(randomizedRandom.nextInt(maxSleep));
 		} catch (InterruptedException e){
@@ -37,7 +37,7 @@ public class Driver extends Person {
 	 */
 	public void driveToDestination() {
 		try {
-			Thread.sleep(lastestPassengers.getTravelTime());
+			Thread.sleep(presentPassenger.getTravelTime());
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
