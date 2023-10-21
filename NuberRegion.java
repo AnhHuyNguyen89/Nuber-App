@@ -21,9 +21,9 @@ import java.util.concurrent.Future;
  */
 public class NuberRegion {
 
+	private ExecutorService exe;
 	private NuberDispatch dispatch;
 	private String regionName;
-	private ExecutorService exe;
 	
 	/**
 	 * Creates a new Nuber region
@@ -57,9 +57,12 @@ public class NuberRegion {
 	{
 		Booking booking = new Booking(dispatch, waitingPassenger);	
 		if(exe.isShutdown()) {
-			dispatch.logEvent(booking, "Booking is rejected");
+
+			dispatch.logEvent(booking, "Booking has been rejected");
 			return null;
+
 		}
+
 		return exe.submit(booking);
 	}
 	

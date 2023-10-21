@@ -20,12 +20,12 @@ public class NuberDispatch {
 	 * The maximum number of idle drivers that can be awaiting a booking 
 	 */
 	private final int MAX_DRIVERS = 999;
-	private int pendingBooking;	//The number of pending bookings that are waiting for a driver
+	private int pendingBooking;	//The number of pending bookings are queueing for a driver
 	private boolean logEvents;
-	public int bookingID;	//The booking ID generated for each booking, must be sequential
+	public int bookingID;	//The booking ID will be generated for every booking.
 	private HashMap<String, Integer> regionInfo;
-	private BlockingQueue<Driver> driverWaitingQueue;	//The blocking queue that is thread-safe, used to safely add and remove elements in multithreaded program
 	private HashMap<String, NuberRegion> regions;
+	private BlockingQueue<Driver> driverWaitingQueue;
 	
 	/**
 	 * Creates a new dispatch objects and instantiates the required regions and any other objects required.
@@ -39,9 +39,9 @@ public class NuberDispatch {
 		System.out.println("Start to create a Nuber Dispatch");
 		this.regionInfo = regionInfo;
 		this.logEvents = logEvents;
-		driverWaitingQueue = new ArrayBlockingQueue<Driver>(MAX_DRIVERS);
-		pendingBooking = 0;
 		bookingID = 1;
+		pendingBooking = 0;
+		driverWaitingQueue = new ArrayBlockingQueue<Driver>(MAX_DRIVERS);
 		
 		//Create regions and add them right here
 		regions = new HashMap<String, NuberRegion>();
@@ -118,12 +118,13 @@ public class NuberDispatch {
 	 * @param region The region to book them into
 	 * @return returns a Future<BookingResult> object
 	 */
+
 	public Future<BookingResult> bookPassenger(Passenger passenger, String region) {
 		NuberRegion bookingRegion = regions.get(region);
-		Future<BookingResult> res = bookingRegion.bookPassenger(passenger);
+		Future<BookingResult> futureBooking = bookingRegion.bookPassenger(passenger);
 		bookingID++;
-		if(res != null) pendingBooking++;
-		return res;
+		if(futureBooking != null) pendingBooking++;
+		return futureBooking;
 	}
 
 	/**

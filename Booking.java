@@ -25,7 +25,7 @@ public class Booking implements Callable<BookingResult>{
 
 	private NuberDispatch dispatch;
 	private Passenger passenger;
-	private BookingResult resultOfBook;
+	private BookingResult resultOfBooking;
 	
 	/**
 	 * Creates a new booking for a given Nuber dispatch and passenger, noting that no
@@ -39,7 +39,7 @@ public class Booking implements Callable<BookingResult>{
 	{
 		this.dispatch = dispatch;
 		this.passenger = passenger;
-		resultOfBook = new BookingResult(dispatch.bookingID, null, null, 0);
+		resultOfBooking = new BookingResult(dispatch.bookingID, null, null, 0);
 		dispatch.logEvent(this, "Booking has been created");
 	}
 	
@@ -61,23 +61,26 @@ public class Booking implements Callable<BookingResult>{
 	 */
 
 	public BookingResult call() {
-		resultOfBook.passenger = passenger;
+		//process the booking and connect to the driver nearby
+		resultOfBooking.passenger = passenger;
 		dispatch.logEvent(this, "Starting to make a booking, connecting to driver");
-		resultOfBook.driver = dispatch.getDriver();
+		resultOfBooking.driver = dispatch.getDriver();
 		
-		//Pick up passenger and drive
+		//Connect successfully driver to customer and make a trip
 		long startDate = new Date().getTime();
 		dispatch.logEvent(this, "Starting a trip now, it's on way to a passenger");
-		resultOfBook.driver.pickUpPassenger(passenger);
+		resultOfBooking.driver.pickUpPassenger(passenger);
 		
+		//Pickup customer and start a trip
 		dispatch.logEvent(this, "Correctly picked up passenger, driving to destination");
-		resultOfBook.driver.driveToDestination();
+		resultOfBooking.driver.driveToDestination();
 		long endDate = new Date().getTime();
-		resultOfBook.tripDuration = endDate - startDate;
+		resultOfBooking.tripDuration = endDate - startDate;
 		
+		//Customer has arrived to the destination and driver is now ready for the trip
 		dispatch.logEvent(this, "Passenger has arrived at destination, and a driver is now ready for next trip");
-		dispatch.addDriver(resultOfBook.driver);
-		return resultOfBook;
+		dispatch.addDriver(resultOfBooking.driver);
+		return resultOfBooking;
 	}
 	
 	/***
@@ -95,9 +98,9 @@ public class Booking implements Callable<BookingResult>{
 	public String toString()
 	{
 		return String.format("%d: %s: %s: ", 
-			resultOfBook.jobID, 
-			resultOfBook.driver != null ? resultOfBook.driver.name : "null", 
-			resultOfBook.passenger != null ? resultOfBook.passenger.name : "null"
+			resultOfBooking.jobID, 
+			resultOfBooking.driver != null ? resultOfBooking.driver.name : "null", 
+			resultOfBooking.passenger != null ? resultOfBooking.passenger.name : "null"
 		);
 	}
 
